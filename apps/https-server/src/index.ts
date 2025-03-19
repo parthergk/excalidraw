@@ -25,7 +25,7 @@ app.post("/signup", async (req: Request, res: Response) => {
   res.status(200).json({message:"user created successfully"})
 });
 
-app.post("/signin", (req: Request, res: Response) => {
+app.post("/signin", async (req: Request, res: Response) => {
   const parsedBody = UserSchema.safeParse(req.body);
 
   if (!parsedBody.success) {
@@ -33,9 +33,18 @@ app.post("/signin", (req: Request, res: Response) => {
     return;
   }
 
-  
+  const user = await prismaClient.user.findFirst({
+    where: {
+      email: parsedBody.data.email
+    }
+  })
 
-  const userId = 1;
+  if (!user) {
+    res.status(400).json({message: "invalid crendetials"});
+    return;
+  }
+
+  const userId = user.id;
   const token = Jwt.sign({ userId }, JWT_SECRET);
   res.json({ token });
 });
