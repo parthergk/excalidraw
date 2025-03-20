@@ -7,6 +7,8 @@ import { RoomSchema, UserSchema } from "@repo/common/types";
 
 const app = Express();
 
+app.use(Express.json());
+
 app.post("/signup", async (req: Request, res: Response) => {
   const parsedBody = UserSchema.safeParse(req.body);
 
@@ -41,6 +43,7 @@ app.post("/signin", async (req: Request, res: Response) => {
     const user = await prismaClient.user.findFirst({
       where: {
         email: parsedBody.data.email,
+        password: parsedBody.data.password
       },
     });
 
@@ -65,17 +68,33 @@ app.post("/room", middleware, async (req: Request, res: Response) => {
   }
   try {
     const adminId = req.userId;
-    await prismaClient.room.create({
+    const room = await prismaClient.room.create({
       data: {
         slug: parsedBody.data.room,
         adminId: adminId,
       },
     });
+    res.status(200).json({roomId: room.id})
   } catch (error) {
     res.status(500).json({ message: "room not created server side error" });
   }
 });
 
+app.get('/chats/:roomId', async (req: Request, res: Response)=>{
+  const roomId = Number(req.params.roomId);
+
+  try {
+   const chats = await prismaClient.chat.findMany({
+      where:{
+        roomId: roomId
+      },
+      
+    })
+    res.status(200).json(chats);
+  } catch (error) {
+    res.status(500).json({message: "chat not founded"});
+  }
+})
 app.listen(8080, () => {
   console.log("https server is runing on this port : 8080");
 });
