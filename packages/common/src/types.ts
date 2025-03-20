@@ -7,5 +7,5 @@ export const UserSchema = z.object({
 })
 
 export const RoomSchema = z.object({
-    room: z.string()
+    room: z.string().min(3).max(20)
 })

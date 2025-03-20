@@ -55,9 +55,11 @@ app.post("/room", middleware, async (req: Request, res: Response) => {
     res.status(400).json({message:"incalid inputs"});
     return;
   }
+  const adminId = req.userId;
   const existRoom = await prismaClient.room.create({
     data:{
-      slug: parsedBody.data.room
+      slug: parsedBody.data.room,
+      adminId: adminId
     }
   })
   if (existRoom) {
