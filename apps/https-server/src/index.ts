@@ -3,7 +3,7 @@ import Jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { middleware } from "./middleware";
 import { prismaClient } from "@repo/db/client";
-import { UserSchema } from "@repo/common/types";
+import { RoomSchema, UserSchema } from "@repo/common/types";
 
 const app = Express();
 
@@ -49,8 +49,20 @@ app.post("/signin", async (req: Request, res: Response) => {
   res.json({ token });
 });
 
-app.post("/room", middleware, (req: Request, res: Response) => {
-  const { roomId } = req.body;
+app.post("/room", middleware, async (req: Request, res: Response) => {
+  const parsedBody = RoomSchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({message:"incalid inputs"});
+    return;
+  }
+  const existRoom = await prismaClient.room.create({
+    data:{
+      slug: parsedBody.data.room
+    }
+  })
+  if (existRoom) {
+    res.status(400).json({message:""})
+  }
 });
 
 app.listen(8080, () => {
