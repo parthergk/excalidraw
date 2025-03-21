@@ -30,7 +30,6 @@ model Chat {
   roomId  Int
   adminId String
   msg     String
-  userId  String
   room    Room   @relation(fields: [roomId], references: [id])
   admin   User   @relation(fields: [adminId], references: [id])
 }

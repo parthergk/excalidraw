@@ -1,6 +1,7 @@
 import  {WebSocketServer, WebSocket}  from "ws";
 import  Jwt, { JwtPayload }  from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
+import { prismaClient } from "@repo/db/client";
 
 const wss = new WebSocketServer({port: 5000});
 
@@ -31,7 +32,7 @@ interface User {
 const users: User[] = [];
 
 
-wss.on("connection", (socket, request)=>{
+wss.on("connection",  (socket, request)=>{
     console.log("connection successfull");
     const url = request.url;
     if (!url) {
@@ -40,21 +41,21 @@ wss.on("connection", (socket, request)=>{
     const queryParams = new URLSearchParams(url.split('?')[1]);
     const token = queryParams.get("token") || "";
     const userId = verifyToken(token);
-
     if (userId == null) {
-        wss.close();
+        socket.close();
+        console.log("connection close successfull");
         return;
     }
-
+    
     users.push({
         userId,
         rooms: [],
         socket
     })
 
-    socket.on("message",(e)=>{
+    socket.on("message",async(e)=>{
         const parsedData = JSON.parse(e.toString());
-
+        
         if (parsedData.type == "join_room") {
             const user = users.find(x => x.socket === socket);
             user?.rooms.push(parsedData.roomId);
@@ -64,16 +65,26 @@ wss.on("connection", (socket, request)=>{
             const user = users.find(x => x.rooms == parsedData.roomId);
             if (!user) {
                 return
-            }
-
-            user.rooms = user.rooms.filter(x => x=== parsedData.roomId)
+            }       
+            user.rooms = user.rooms.filter(x => x !== parsedData.roomId)
+            console.log("user inside leave room", user);
+            console.log("users inside leave room", users);
         }
 
         if (parsedData.type === "chat") {
             const roomId = parsedData.roomId;
             const message = parsedData.message;
 
+            await prismaClient.chat.create({
+                data: {
+                 roomId: Number(roomId),
+                 msg:message,
+                 adminId: userId 
+                }
+            });
+
             users.forEach(user => {
+                console.log("user id in side for each", user.userId);
                 if (user.rooms.includes(roomId)) {
                     user.socket.send(JSON.stringify({
                         type: "chat",

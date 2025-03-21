@@ -3,14 +3,14 @@ import Jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { middleware } from "./middleware";
 import { prismaClient } from "@repo/db/client";
-import { RoomSchema, UserSchema } from "@repo/common/types";
+import { RoomSchema, UserSignupSchema, UserSigninSchema } from "@repo/common/types";
 
 const app = Express();
 
 app.use(Express.json());
 
 app.post("/signup", async (req: Request, res: Response) => {
-  const parsedBody = UserSchema.safeParse(req.body);
+  const parsedBody = UserSignupSchema.safeParse(req.body);
 
   if (!parsedBody.success) {
     res.status(400).json({ message: "invalid inputs" });
@@ -18,21 +18,25 @@ app.post("/signup", async (req: Request, res: Response) => {
   }
 
   try {
-    await prismaClient.user.create({
+    const newuser = await prismaClient.user.create({
       data: {
         email: parsedBody.data.email,
         password: parsedBody.data.password,
         name: parsedBody.data.name,
       },
     });
+    console.log("new user", newuser);
+    
     res.status(200).json({ message: "user created successfully" });
   } catch (error) {
+    console.log("server side error", error);
+    
     res.status(500).json({ message: "user not registired" });
   }
 });
 
 app.post("/signin", async (req: Request, res: Response) => {
-  const parsedBody = UserSchema.safeParse(req.body);
+  const parsedBody = UserSigninSchema.safeParse(req.body);
 
   if (!parsedBody.success) {
     res.status(400).json({ message: "invalid inputs" });
@@ -56,6 +60,7 @@ app.post("/signin", async (req: Request, res: Response) => {
     const token = Jwt.sign({ userId }, JWT_SECRET);
     res.json({ token });
   } catch (error) {
+    console.log("server side error", error);
     res.status(500).json({ message: "server side error" });
   }
 });
