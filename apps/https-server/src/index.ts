@@ -99,7 +99,18 @@ app.get('/chats/:roomId', async (req: Request, res: Response)=>{
   } catch (error) {
     res.status(500).json({message: "chat not founded"});
   }
-})
+});
+
+app.get('/room:slug', async(req:Request, res:Response)=>{
+  const slug = req.params.slug;
+  const room = await prismaClient.room.findFirst({
+    where: {
+      slug
+    }
+  })
+  res.status(200).json({room});
+});
+
 app.listen(8080, () => {
   console.log("https server is runing on this port : 8080");
 });
