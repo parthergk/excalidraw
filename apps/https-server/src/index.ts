@@ -107,11 +107,13 @@ app.get("/chats/:roomId", async (req: Request, res: Response) => {
 app.get("/room/:slug", async (req: Request, res: Response) => {
   try {
     const slug = req.params.slug;
+    
     const room = await prismaClient.room.findFirst({
       where: {
         slug,
       },
     });
+    
     if (!room) {
       res.status(201).json({message:"no room founded"});
       return;

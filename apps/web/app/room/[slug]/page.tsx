@@ -3,17 +3,12 @@ import { BACKEND_URL } from "../../config";
 
 const getRooms = async (slug: string) => {
   const response = await axios.get(`${BACKEND_URL}/room/${slug}`);
-  console.log("response", response);
-  
-  return response.data.id;
+  return response.data;
 };
 const RoomId = async ({ params }: { params: { slug: string } }) => {
   const slug = params.slug;
-  console.log("slug from params", slug);
-
-  const roomId = await getRooms(slug);
-  console.log("room id", roomId);
-
+  const data = await getRooms(slug);
+  console.log("room id", data.room.id);
   return <div>RoomId</div>;
 };
 
