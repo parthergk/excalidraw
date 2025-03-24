@@ -41,6 +41,7 @@ wss.on("connection",  (socket, request)=>{
     const queryParams = new URLSearchParams(url.split('?')[1]);
     const token = queryParams.get("token") || "";
     const userId = verifyToken(token);
+    
     if (userId == null) {
         socket.close();
         console.log("connection close successfull");

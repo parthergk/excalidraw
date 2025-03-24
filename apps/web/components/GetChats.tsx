@@ -1,6 +1,7 @@
 import axios from 'axios'
 import React from 'react'
 import { BACKEND_URL } from '../app/config'
+import ChatClient from './ChatClient';
 
 const getChats = async(roomId: string)=>{
     const response = await axios.get(`${BACKEND_URL}/chats/${roomId}`);
@@ -11,10 +12,8 @@ const GetChats = async ({id}: {
 }) => {
 
     const messages = await getChats(id);
-    console.log("messages", messages);
-    
   return (
-    <div>GetChats</div>
+    <ChatClient id={id} messages={messages}/>
   )
 }
 
