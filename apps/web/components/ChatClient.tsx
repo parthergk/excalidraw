@@ -33,7 +33,7 @@ const ChatClient = ({
   return (
     <div>
       {chats.length !== 0
-        ? chats.map((m) => <div>{m.msg}</div>)
+        ? chats.map((m) => <div key={m.msg}>{m.msg}</div>)
         : "no message"}
       <div>
         <input
@@ -45,7 +45,7 @@ const ChatClient = ({
           socket?.send(JSON.stringify({
             type: "chat",
             roomId: id,
-            messages: currentChat
+            message: currentChat
           }))
           setCurrentChat("");
         }}>send</button>

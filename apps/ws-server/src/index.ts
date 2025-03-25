@@ -55,8 +55,9 @@ wss.on("connection",  (socket, request)=>{
     })
 
     socket.on("message",async(e)=>{
+        console.log("event", e.toString());
         const parsedData = JSON.parse(e.toString());
-        
+                
         if (parsedData.type == "join_room") {
             const user = users.find(x => x.socket === socket);
             user?.rooms.push(parsedData.roomId);
@@ -68,8 +69,6 @@ wss.on("connection",  (socket, request)=>{
                 return
             }       
             user.rooms = user.rooms.filter(x => x !== parsedData.roomId)
-            console.log("user inside leave room", user);
-            console.log("users inside leave room", users);
         }
 
         if (parsedData.type === "chat") {
