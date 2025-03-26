@@ -1,3 +1,5 @@
+import axios from "axios";
+
 type Shape =
   | {
       type: "rect";
@@ -12,8 +14,11 @@ type Shape =
       centerY: number;
       radius: number;
     };
-export function initDraw(canvas: HTMLCanvasElement) {
+
+export function initDraw(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket | null) {  
   const ctx = canvas.getContext("2d");
+  getExistingShapes(roomId);
+  
   let existingShapes: Shape[] = [];
   if (!ctx) {
     return;
@@ -23,10 +28,9 @@ export function initDraw(canvas: HTMLCanvasElement) {
   let startY = 0;
   canvas.addEventListener("mousedown", (e) => {
     clicked = true;
-    console.log("down x", e.clientX);
     startX = e.clientX;
-    console.log("down y", e.clientY);
     startY = e.clientY;
+
   });
 
   canvas.addEventListener("mouseup", (e) => {
@@ -41,6 +45,18 @@ export function initDraw(canvas: HTMLCanvasElement) {
       x: startX,
       y: startY,
     });
+    
+    // socket?.send(JSON.stringify({
+    //   type: "chat",
+    //   message: JSON.stringify({
+    //     type: "rect",
+    //     width,
+    //     height,
+    //     x: startX,
+    //     y: startY,
+    //   }),
+    //   roomId
+    // }))
   });
   canvas.addEventListener("mousemove", (e) => {
     if (clicked) {
@@ -66,4 +82,10 @@ function clearCanva(
           ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
       }
   });
+}
+
+async function getExistingShapes(roomId: string) {
+  // console.log("room id", roomId);
+  // const response = await axios.get(`http://localhost:8080/chats/${roomId}`);
+  return roomId;
 }
