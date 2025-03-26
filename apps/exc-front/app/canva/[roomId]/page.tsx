@@ -1,4 +1,5 @@
 "use client";
+import { initDraw } from "@/draw";
 import React, { useEffect, useRef } from "react";
 
 const Canva = ({ params }: { params: string }) => {
@@ -6,37 +7,7 @@ const Canva = ({ params }: { params: string }) => {
 
   useEffect(() => {
     if (canvaRef.current) {
-      const canvas = canvaRef.current;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        return;
-      }
-      let clicked = false;
-      let startX = 0;
-      let startY = 0;
-      canvas.addEventListener("mousedown", (e) => {
-        clicked = true;
-        console.log("down x", e.clientX);
-        startX = e.clientX;
-        console.log("down y", e.clientY);
-        startY = e.clientY;
-      });
-
-      canvas.addEventListener("mouseup", (e) => {
-        clicked = false;
-        // const width = e.clientX - startX;
-        // const height = e.clientY - startY;
-        // ctx.strokeRect(startX, startY, width, height);
-      });
-      canvas.addEventListener("mousemove", (e) => {
-        if (clicked) {
-          const width = e.clientX - startX;
-          const height = e.clientY - startY;
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.strokeStyle = "#ffffff";
-          ctx.strokeRect(startX, startY, width, height);
-        }
-      });
+      initDraw(canvaRef.current);
     }
   }, [canvaRef]);
   return (
