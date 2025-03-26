@@ -1,10 +1,10 @@
 import AuthPage from '@/components/AuthPage'
 import React from 'react'
 
-const Signup = () => {
+const SignIn = () => {
   return (
-    <div><AuthPage isSignin={false}/></div>
+    <div><AuthPage isSignin={true}/></div>
   )
 }
 
-export default Signup
+export default SignIn
