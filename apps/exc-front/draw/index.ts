@@ -1,91 +1,104 @@
+import { BACKEND_URL } from "@/config";
 import axios from "axios";
-
-type Shape =
-  | {
-      type: "rect";
-      width: number;
-      height: number;
-      x: number;
-      y: number;
-    }
-  | {
-      type: "circle";
-      centerX: number;
-      centerY: number;
-      radius: number;
-    };
-
-export function initDraw(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket | null) {  
-  const ctx = canvas.getContext("2d");
-  getExistingShapes(roomId);
+type Shape = {
+    type: "rect" ,
+    width: number,
+    height: number,
+    x: number,
+    y: number
+  } | {
+    type: "circle" ,
+    x: number,
+    y: number,
+    radus: number
+  }
+export async function drawShape(
+  canva: HTMLCanvasElement,
+  roomId: string,
+  socket: WebSocket
+) {
+  const ctx = canva.getContext("2d");
   
-  let existingShapes: Shape[] = [];
+  const shapes:Shape[] = await getExisting(roomId);
   if (!ctx) {
     return;
   }
+
+  socket.onmessage = (e)=>{
+    const parsedData = JSON.parse(e.data);    
+    if (parsedData.type = "chat") {
+      const shape = JSON.parse(parsedData.message);
+      shapes.push(shape)  
+      clearCanva(canva, ctx, shapes);
+    }
+  }
+  
+  clearCanva(canva, ctx, shapes);
+  let stratX = 0;
+  let stratY = 0;
   let clicked = false;
-  let startX = 0;
-  let startY = 0;
-  canvas.addEventListener("mousedown", (e) => {
+
+  canva.addEventListener("mousedown", (e) => {
     clicked = true;
-    startX = e.clientX;
-    startY = e.clientY;
-
+    stratX = e.offsetX;
+    stratY = e.offsetY;
   });
 
-  canvas.addEventListener("mouseup", (e) => {
+  canva.addEventListener("mouseup", (e) => {
     clicked = false;
-    const width = e.clientX - startX;
-    const height = e.clientY - startY;
-    // ctx.strokeRect(startX, startY, width, height);
-    existingShapes.push({
-      type: "rect",
-      width,
-      height,
-      x: startX,
-      y: startY,
-    });
-    
-    // socket?.send(JSON.stringify({
-    //   type: "chat",
-    //   message: JSON.stringify({
-    //     type: "rect",
-    //     width,
-    //     height,
-    //     x: startX,
-    //     y: startY,
-    //   }),
-    //   roomId
-    // }))
+    const width = e.offsetX - stratX;
+    const height = e.offsetY - stratY;
+    shapes.push({
+        type: "rect",
+        width,
+        height,
+        x: stratX,
+        y: stratY
+    })
+
+    socket?.send(JSON.stringify({
+      type: "chat",
+      roomId,
+      message: JSON.stringify({
+        type: "rect",
+        width,
+        height,
+        x: stratX,
+        y: stratY
+      })
+    }))
   });
-  canvas.addEventListener("mousemove", (e) => {
+
+  canva.addEventListener("mousemove", (e) => {
     if (clicked) {
-      const width = e.clientX - startX;
-      const height = e.clientY - startY;
-      clearCanva(canvas, ctx, existingShapes);
+      const width = e.offsetX - stratX;
+      const height = e.offsetY - stratY;
+      clearCanva(canva, ctx, shapes);
       ctx.strokeStyle = "#ffffff";
-      ctx.strokeRect(startX, startY, width, height);
+      ctx.strokeRect(stratX, stratY, width, height);
     }
 });
 }
 
 function clearCanva(
-    canvas: HTMLCanvasElement,
+    canva: HTMLCanvasElement,
     ctx: CanvasRenderingContext2D,
-  existingShapes: Shape[]
+    shapes: Shape[]
 ) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  existingShapes.map((shape) => {
-      if (shape.type=="rect") {
-          ctx.strokeStyle = "#ffffff";
-          ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
-      }
-  });
+    ctx.clearRect(0, 0, canva.width, canva.height);
+    shapes.map(shape=>{
+        if (shape.type=="rect") {
+            ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
+        }
+    
+  })
 }
 
-async function getExistingShapes(roomId: string) {
-  // console.log("room id", roomId);
-  // const response = await axios.get(`http://localhost:8080/chats/${roomId}`);
-  return roomId;
+async function getExisting(roomId:string) {
+  const response = await axios.get(`${BACKEND_URL}/chats/${roomId}`);
+  const data = response.data;
+  const shapes = data.map((x: {msg:string})=>{
+    return x.msg;
+  })
+  return shapes
 }

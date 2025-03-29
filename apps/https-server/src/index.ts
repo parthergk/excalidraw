@@ -8,10 +8,12 @@ import {
   UserSignupSchema,
   UserSigninSchema,
 } from "@repo/common/types";
+import cors from "cors";
 
 const app = Express();
 
 app.use(Express.json());
+app.use(cors());
 
 app.post("/signup", async (req: Request, res: Response) => {
   const parsedBody = UserSignupSchema.safeParse(req.body);
