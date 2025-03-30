@@ -18,8 +18,8 @@ export async function drawShape(
   socket: WebSocket
 ) {
   const ctx = canva.getContext("2d");
-  
-  const shapes:Shape[] = await getExisting(roomId);
+  // await getExisting(roomId);
+  const shapes:Shape[] = [];
   if (!ctx) {
     return;
   }
