@@ -15,8 +15,8 @@ type Shape = {
 export async function drawShape(
   canva: HTMLCanvasElement,
   roomId: string,
-  socket: WebSocket
-) {
+  socket: WebSocket,
+) {  
   const ctx = canva.getContext("2d");
   // await getExisting(roomId);
   const shapes:Shape[] = [];
