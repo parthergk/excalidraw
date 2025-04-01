@@ -2,18 +2,22 @@ import { drawShape } from "@/draw";
 import React, { useEffect, useRef, useState } from "react";
 import ShapeBar from "./ShapeBar";
 import { Circle, PencilLine, RectangleHorizontal } from "lucide-react";
+import { Game } from "@/draw/Game";
 
 const Canva = ({ socket, roomId }: { socket: WebSocket; roomId: string }) => {
   const canvaRef = useRef<HTMLCanvasElement>(null);
-  const [selectedTool, setSelectedTool] = useState<string>('');  
+  const [selectedTool, setSelectedTool] = useState<string>('');
+  const [game, setGame] = useState<Game>();
+
   useEffect(()=>{
-    //@ts-ignore
-    window.selectedTool = selectedTool;
-  },[selectedTool]);
+    game?.setTool(selectedTool);
+  },[selectedTool, game]);
 
   useEffect(() => {    
       if (canvaRef.current) {
-        drawShape(canvaRef.current, roomId, socket);
+        const g = new Game(canvaRef.current, roomId, socket);
+        setGame(g);
+        // drawShape(canvaRef.current, roomId, socket);
       }
   }, [canvaRef]);
   return (

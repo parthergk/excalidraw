@@ -16,30 +16,37 @@ type Shape =
     };
 export class Game {
   private canvas: HTMLCanvasElement;
-  private roomId: string;
-  private socket: WebSocket;
   private ctx: CanvasRenderingContext2D;
   private shapes: Shape[];
+  private roomId: string;
   private clicked: boolean;
-  private startX: number;
-  private startY: number;
+  socket: WebSocket;
+  private startX= 0;
+  private startY= 0;
+  private selectedTool: string = '';
 
   constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
     this.canvas = canvas;
-    this.roomId = roomId;
-    this.socket = socket;
     this.ctx = canvas.getContext("2d")!;
     this.shapes = [];
+    this.roomId = roomId;
+    this.socket = socket;
+    this.clicked = false;
     this.init();
     this.initMsg();
+    this.initMousehandler();
     this.initclearCanva;
-    this.clicked = false;
-    this.startX = 0;
-    this.startY = 0;
+   }
+
+  setTool(tool: string){
+    this.selectedTool = tool;
   }
 
   async init() {
     this.shapes = await getExisting(this.roomId);
+    console.log("shapes", this.shapes);
+    
+    this.initclearCanva();
   }
 
   initMsg() {
@@ -68,7 +75,7 @@ export class Game {
   }
 
   initMousehandler() {
-    this.canvas.addEventListener("mousedown", (e) => {
+    this.canvas.addEventListener("mousedown", (e) => {        
       this.clicked = true;
       this.startX = e.clientX;
       this.startY = e.clientY;
@@ -78,9 +85,7 @@ export class Game {
       this.clicked = false;
       const width = e.offsetX - this.startX;
       const height = e.offsetY - this.startY;
-
-      //@ts-ignore;
-      const selectedTool = window.selectedTool;
+      const selectedTool = this.selectedTool;
       let shape: Shape | null = null;
       if (selectedTool == "rect") {
         shape = {
@@ -116,8 +121,7 @@ export class Game {
 
     this.canvas.addEventListener("mousemove", (e) => {
       if (this.clicked) {
-        //@ts-ignore;
-        const selectedTool = window.selectedTool;
+        const selectedTool = this.selectedTool;
 
         const width = e.clientX - this.startX;
         const height = e.clientY - this.startY;
