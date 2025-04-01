@@ -1,12 +1,16 @@
 import { drawShape } from "@/draw";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ShapeBar from "./ShapeBar";
 import { Circle, PencilLine, RectangleHorizontal } from "lucide-react";
 
 const Canva = ({ socket, roomId }: { socket: WebSocket; roomId: string }) => {
   const canvaRef = useRef<HTMLCanvasElement>(null);
-  function getShapeType(type: string) {
-  }
+  const [selectedTool, setSelectedTool] = useState<string>('');  
+  useEffect(()=>{
+    //@ts-ignore
+    window.selectedTool = selectedTool;
+  },[selectedTool]);
+
   useEffect(() => {    
       if (canvaRef.current) {
         drawShape(canvaRef.current, roomId, socket);
@@ -17,16 +21,16 @@ const Canva = ({ socket, roomId }: { socket: WebSocket; roomId: string }) => {
       <canvas ref={canvaRef} width={1350} height={670}></canvas>
       <div className=" flex gap-5 absolute top-5 left-5 text-white px-2 py-1 border">
         <Circle
-          onClick={() => getShapeType("circle")}
-          className=" hover:bg-neutral-700 hover:cursor-pointer"
+          onClick={() => setSelectedTool("circle")}
+          className={` hover:bg-neutral-700 hover:cursor-pointer ${selectedTool==="circle" ? "bg-neutral-800" : ""}`}
         />
         <RectangleHorizontal
-          onClick={() => getShapeType("rect")}
-          className=" hover:bg-neutral-700 hover:cursor-pointer"
+          onClick={() => setSelectedTool("rect")}
+          className={` hover:bg-neutral-700 hover:cursor-pointer ${selectedTool==="rect" ? "bg-neutral-800" : ""}`}
         />
         <PencilLine
-          onClick={() => getShapeType("line")}
-          className=" hover:bg-neutral-700 hover:cursor-pointer"
+          onClick={() => setSelectedTool("line")}
+          className={` hover:bg-neutral-700 hover:cursor-pointer ${selectedTool==="line" ? "bg-neutral-800" : ""}`}
         />
       </div>
     </div>
