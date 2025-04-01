@@ -21,9 +21,9 @@ export class Game {
   private roomId: string;
   private clicked: boolean;
   socket: WebSocket;
-  private startX= 0;
-  private startY= 0;
-  private selectedTool: string = '';
+  private startX = 0;
+  private startY = 0;
+  private selectedTool: string = "";
 
   constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
     this.canvas = canvas;
@@ -36,16 +36,20 @@ export class Game {
     this.initMsg();
     this.initMousehandler();
     this.initclearCanva;
-   }
+  }
 
-  setTool(tool: string){
+  destroy() {
+    this.canvas.removeEventListener("mousedown", this.downhandler);
+    this.canvas.removeEventListener("mouseup", this.uphandler);
+    this.canvas.removeEventListener("mousemove", this.movehandler);
+  }
+
+  setTool(tool: string) {
     this.selectedTool = tool;
   }
 
   async init() {
     this.shapes = await getExisting(this.roomId);
-    console.log("shapes", this.shapes);
-    
     this.initclearCanva();
   }
 
@@ -61,8 +65,9 @@ export class Game {
   }
 
   initclearCanva() {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.shapes.map((shape) => {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);    
+    this.shapes.map((shape) => { 
+      this.ctx.strokeStyle = "#ffffff";
       if (shape.type == "rect") {
         this.ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
       } else if (shape.type == "circle") {
@@ -74,71 +79,75 @@ export class Game {
     });
   }
 
-  initMousehandler() {
-    this.canvas.addEventListener("mousedown", (e) => {        
-      this.clicked = true;
-      this.startX = e.clientX;
-      this.startY = e.clientY;
-    });
+  downhandler(e) {
+    this.clicked = true;
+    this.startX = e.clientX;
+    this.startY = e.clientY;
+  }
 
-    this.canvas.addEventListener("mouseup", (e) => {
-      this.clicked = false;
-      const width = e.offsetX - this.startX;
-      const height = e.offsetY - this.startY;
+  uphandler(e) {
+    this.clicked = false;
+    const width = e.offsetX - this.startX;
+    const height = e.offsetY - this.startY;
+    const selectedTool = this.selectedTool;
+    let shape: Shape | null = null;
+    if (selectedTool == "rect") {
+      shape = {
+        type: "rect",
+        width,
+        height,
+        x: this.startX,
+        y: this.startY,
+      };
+    } else if (selectedTool == "circle") {
+      const radus = Math.max(width, height) / 2;
+      shape = {
+        type: "circle",
+        radus,
+        x: this.startX + width / 2,
+        y: this.startY + height / 2,
+      };
+    }
+
+    if (!shape) {
+      return;
+    }
+    this.shapes.push(shape);
+
+    this.socket?.send(
+      JSON.stringify({
+        type: "chat",
+        roomId: this.roomId,
+        message: JSON.stringify(shape),
+      })
+    );
+  }
+
+  movehandler(e) {
+    if (this.clicked) {
       const selectedTool = this.selectedTool;
-      let shape: Shape | null = null;
+
+      const width = e.clientX - this.startX;
+      const height = e.clientY - this.startY;
+      this.initclearCanva();
+      this.ctx.strokeStyle = "#ffffff";
       if (selectedTool == "rect") {
-        shape = {
-          type: "rect",
-          width,
-          height,
-          x: this.startX,
-          y: this.startY,
-        };
+        this.ctx.strokeRect(this.startX, this.startY, width, height);
       } else if (selectedTool == "circle") {
+        const x = this.startX + width / 2;
+        const y = this.startY + height / 2;
         const radus = Math.max(width, height) / 2;
-        shape = {
-          type: "circle",
-          radus,
-          x: this.startX + width / 2,
-          y: this.startY + height / 2,
-        };
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, radus, 0, 2 * Math.PI);
+        this.ctx.stroke();
+        this.ctx.closePath();
       }
+    }
+  }
 
-      if (!shape) {
-        return;
-      }
-      this.shapes.push(shape);
-
-      this.socket?.send(
-        JSON.stringify({
-          type: "chat",
-          roomId: this.roomId,
-          message: JSON.stringify(shape),
-        })
-      );
-    });
-
-    this.canvas.addEventListener("mousemove", (e) => {
-      if (this.clicked) {
-        const selectedTool = this.selectedTool;
-
-        const width = e.clientX - this.startX;
-        const height = e.clientY - this.startY;
-        this.initclearCanva();
-        this.ctx.strokeStyle = "#ffffff";
-        if (selectedTool == "rect") {
-          this.ctx.strokeRect(this.startX, this.startY, width, height);
-        } else if (selectedTool == "circle") {
-          const x = this.startX + width / 2;
-          const y = this.startY + height / 2;
-          const radus = Math.max(width, height) / 2;
-          this.ctx.beginPath();
-          this.ctx.arc(x, y, radus, 0, 2 * Math.PI);
-          this.ctx.stroke();
-          this.ctx.closePath();
-        }
-      }
-    });
+  initMousehandler() {
+    this.canvas.addEventListener("mousedown", this.downhandler.bind(this));
+    this.canvas.addEventListener("mouseup", this.uphandler.bind(this));
+    this.canvas.addEventListener("mousemove", this.movehandler.bind(this));
   }
 }
