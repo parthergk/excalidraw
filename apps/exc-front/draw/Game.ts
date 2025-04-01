@@ -1,7 +1,6 @@
 import { getExisting } from "./http";
 
-type Shape =
-  | {
+type Shape = {
       type: "rect";
       width: number;
       height: number;
@@ -13,6 +12,12 @@ type Shape =
       x: number;
       y: number;
       radus: number;
+    } | {
+      type: "line",
+      startX: number,
+      startY: number,
+      endX: number,
+      endY: number
     };
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -75,6 +80,11 @@ export class Game {
         this.ctx.arc(shape.x, shape.y, shape.radus, 0, 2 * Math.PI);
         this.ctx.stroke();
         this.ctx.closePath();
+      } else if(shape.type == "line"){
+        this.ctx.beginPath();
+        this.ctx.moveTo(shape.startX, shape.startY);
+        this.ctx.lineTo(shape.endX, shape.endY);
+        this.ctx.stroke();
       }
     });
   }
@@ -106,6 +116,14 @@ export class Game {
         radus,
         x: this.startX + width / 2,
         y: this.startY + height / 2,
+      };
+    }else if(selectedTool == "line"){
+      shape = {
+        type: "line",
+        startX: this.startX,
+        startY: this.startY,
+        endX: e.clientX,
+        endY: e.clientY
       };
     }
 
@@ -141,6 +159,11 @@ export class Game {
         this.ctx.arc(x, y, radus, 0, 2 * Math.PI);
         this.ctx.stroke();
         this.ctx.closePath();
+      }else if (selectedTool == "line") {
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.startX, this.startY);
+        this.ctx.lineTo(e.clientX, e.clientY);
+        this.ctx.stroke();
       }
     }
   }
