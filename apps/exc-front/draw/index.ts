@@ -50,25 +50,40 @@ export async function drawShape(
     clicked = false;
     const width = e.offsetX - stratX;
     const height = e.offsetY - stratY;
-    shapes.push({
-      type: "rect",
-      width,
-      height,
-      x: stratX,
-      y: stratY,
-    });
 
+    //@ts-ignore;
+    const selectedTool = window.selectedTool;
+    let shape: Shape | null = null;
+    if (selectedTool == "rect") {
+      shape = {
+        type: "rect",
+        width,
+        height,
+        x: stratX,
+        y: stratY,
+      };
+    } else if (selectedTool == "circle") {
+      const radus = Math.max(width, height) / 2;
+      shape = {
+        type: "circle",
+        radus,
+        x: stratX + width / 2,
+        y: stratY + height / 2,
+      };
+    }
+
+    if (!shape) {
+      return;
+    }
+    shapes.push(shape);
+    
     socket?.send(
       JSON.stringify({
         type: "chat",
         roomId,
-        message: JSON.stringify({
-          type: "rect",
-          width,
-          height,
-          x: stratX,
-          y: stratY,
-        }),
+        message: JSON.stringify(
+          shape
+        ),
       })
     );
   });
@@ -86,8 +101,8 @@ export async function drawShape(
         ctx.strokeRect(stratX, stratY, width, height);
       } else if (selectedTool == "circle") {
         const x = stratX + width / 2;
-        const y = stratY + height / 2;        
-        const radus = Math.max(width, height)/2;
+        const y = stratY + height / 2;
+        const radus = Math.max(width, height) / 2;
         ctx.beginPath();
         ctx.arc(x, y, radus, 0, 2 * Math.PI);
         ctx.stroke();
@@ -108,15 +123,13 @@ function clearCanva(
   shapes.map((shape) => {
     if (shape.type == "rect") {
       ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
+    } else if (shape.type == "circle") {
+      ctx.beginPath();
+      ctx.arc(shape.x, shape.y, shape.radus, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.closePath();
     }
   });
 }
 
-async function getExisting(roomId: string) {
-  const response = await axios.get(`${BACKEND_URL}/chats/${roomId}`);
-  const data = response.data;
-  const shapes = data.map((x: { msg: string }) => {
-    return x.msg;
-  });
-  return shapes;
-}
+
